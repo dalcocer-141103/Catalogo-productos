@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "nombre": "Laptop Lenovo ThinkPad",
+    "precio": 12500,
+    "categoria": "Laptops",
+    "imagen": "https://via.placeholder.com/300",
+    "descripcion": "Equipo empresarial de alto rendimiento"
+  },
+  {
+    "id": 2,
+    "nombre": "Monitor Dell 24\"",
+    "precio": 4200,
+    "categoria": "Monitores",
+    "imagen": "https://via.placeholder.com/300",
+    "descripcion": "Monitor Full HD para oficina"
+  }
+]
