@@ -690,7 +690,7 @@
 }
 
 /* === CARRITO LATERAL (SLIDE-CART) === */
-
+/* === CARRITO LATERAL (SLIDE-CART) === */
 /* Botón Flotante (Burbuja) */
 .float-cart-btn {
     position: fixed;
@@ -710,28 +710,9 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     transition: 0.3s;
 }
-
-.float-cart-btn {
-    position: fixed;
-    bottom: 30px;       /* CAMBIO: En lugar de top: 20px, lo ponemos abajo */
-    right: 30px;        /* Un poco más separado del borde */
-    z-index: 2147483647; /* CAMBIO: El valor máximo permitido en CSS para que SIEMPRE esté encima */
-    background: var(--card-bg);
-    border: 1px solid var(--eri-light);
-    color: var(--eri-light);
-    width: 60px;        /* Un poco más grande para que sea fácil de tocar en móvil */
-    height: 60px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.8); /* Sombra más fuerte para resaltar */
-    transition: 0.3s;
-}
+.float-cart-btn:hover { background: var(--eri-light); color: var(--bg-body); }
 
 /* Contador rojo */
-
 .cart-counter {
     position: absolute;
     top: -5px;
@@ -767,6 +748,8 @@
 }
 
 .cart-sidebar.open { right: 0; /* Mostrar */ }
+
+/* Máscara oscura de fondo */
 .cart-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -778,13 +761,11 @@
 .cart-overlay.active { display: block; }
 
 /* Elementos internos del carrito */
-
 .cart-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
 .cart-body { flex: 1; overflow-y: auto; padding: 20px; }
 .cart-footer { padding: 20px; background: #0f171a; border-top: 1px solid rgba(255,255,255,0.1); }
 
 /* Item del carrito */
-
 .cart-item { display: flex; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; }
 .cart-item img { width: 50px; height: 50px; object-fit: contain; background: white; border-radius: 4px; }
 .cart-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
@@ -801,6 +782,4 @@
     color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
     font-size: 1rem; display: flex; justify-content: center; align-items: center; gap: 10px;
 }
-
-
 
