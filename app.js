@@ -1,5 +1,6 @@
 const URL_JSON = "https://raw.githubusercontent.com/dalcocer-141103/Catalogo-productos/refs/heads/main/productos.json";
 const TELEFONO = "525515107577"; 
+// REDUCCIÓN DE ITEMS PARA EVITAR SCROLL LARGO Y PANTALLA NEGRA
 const ITEMS_POR_PAGINA = 12; 
 
 let productosGlobal = [];
@@ -11,149 +12,6 @@ let scrollGuardado = 0;
 
 let filtrosActivos = { subcategoria: null, marca: null, procesador: null, ram: null, almacenamiento: null };
 
-// --- LÓGICA DE CARRITO ---
-let carrito = JSON.parse(localStorage.getItem('eritech_cart')) || [];
-
-function addToCart(prod, e) {
-    if(e) e.stopPropagation();
-    
-    // Verificar si ya existe
-    const existente = carrito.find(item => item.sku === (prod.sku || prod.clave));
-    
-    if(existente) {
-        existente.cantidad++;
-    } else {
-        carrito.push({
-            sku: prod.sku || prod.clave,
-            nombre: prod.nombre,
-            precio: prod.precio || 0,
-            imagen: prod.imagen,
-            cantidad: 1
-        });
-    }
-    
-    guardarCarrito();
-    actualizarBadgeCarrito();
-    
-    // Feedback visual
-    const btn = e ? e.currentTarget : document.getElementById('btn-add-detail');
-    if(btn) {
-        btn.style.transform = "scale(1.2)";
-        setTimeout(() => btn.style.transform = "scale(1)", 200);
-    }
-    
-    // Si el modal está abierto, renderizar
-    if(document.getElementById('cart-overlay').classList.contains('open')) {
-        renderCartItems();
-    }
-}
-
-function removeFromCart(sku) {
-    carrito = carrito.filter(item => item.sku !== sku);
-    guardarCarrito();
-    renderCartItems();
-    actualizarBadgeCarrito();
-}
-
-function cambiarCant(sku, cambio) {
-    const item = carrito.find(i => i.sku === sku);
-    if (!item) return;
-
-    item.cantidad += cambio;
-
-    if (item.cantidad <= 0) {
-        removeFromCart(sku);
-    } else {
-        guardarCarrito();
-        renderCartItems();
-        actualizarBadgeCarrito();
-    }
-}
-
-function guardarCarrito() {
-    localStorage.setItem('eritech_cart', JSON.stringify(carrito));
-}
-
-function actualizarBadgeCarrito() {
-    const count = carrito.reduce((acc, item) => acc + item.cantidad, 0);
-    document.getElementById('cart-counter').innerText = count;
-    document.getElementById('cart-counter').style.display = count > 0 ? 'flex' : 'none';
-}
-
-function toggleCart() {
-    const overlay = document.getElementById('cart-overlay');
-    if (overlay.classList.contains('open')) {
-        overlay.classList.remove('open');
-    } else {
-        overlay.classList.add('open');
-        renderCartItems();
-    }
-}
-
-const formatearDinero = (c) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(c);
-
-function renderCartItems() {
-    const container = document.getElementById('cart-items-container');
-    const totalEl = document.getElementById('cart-total-price');
-    
-    if(carrito.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:50px; color:#ccc"><span class="material-icons-outlined" style="font-size:40px">remove_shopping_cart</span><br>Tu carrito está vacío</div>';
-        totalEl.innerText = "$0.00";
-        return;
-    }
-    
-    container.innerHTML = '';
-    let total = 0;
-    
-    carrito.forEach(item => {
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
-        
-        container.innerHTML += `
-            <div class="cart-item" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">
-                <div style="flex:1">
-                    <div style="font-size:0.85rem; font-weight:600; color:white; margin-bottom:5px;">${item.nombre}</div>
-                    <div style="color:var(--eri-light); font-size:0.8rem;">$${item.precio} c/u</div>
-                </div>
-                
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <button class="qty-btn" onclick="cambiarCant('${item.sku}', -1)">-</button>
-                    <span class="qty-display">${item.cantidad}</span>
-                    <button class="qty-btn" onclick="cambiarCant('${item.sku}', 1)">+</button>
-                </div>
-
-                <div style="margin-left:15px;">
-                     <span class="material-icons-outlined btn-remove" onclick="removeFromCart('${item.sku}')" style="color:#ff5252; cursor:pointer;">delete</span>
-                </div>
-            </div>
-        `;
-    });
-    
-    totalEl.innerText = formatearDinero(total);
-}
-
-// --- CONFIRMACIÓN POR WHATSAPP (MÉTODO SEGURO) ---
-function enviarPedidoWhatsApp() {
-    if(carrito.length === 0) return;
-    
-    let mensaje = "Hola Eritech, deseo confirmar el siguiente pedido:%0A%0A";
-    let total = 0;
-    
-    carrito.forEach(item => {
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
-        let nombreCorto = item.nombre.substring(0, 25);
-        if(item.nombre.length > 25) nombreCorto += "...";
-        
-        mensaje += `*${item.cantidad}x* ${nombreCorto} - SKU:${item.sku} - ${formatearDinero(subtotal)}%0A`;
-    });
-    
-    mensaje += `%0A*TOTAL APROX:* ${formatearDinero(total)}%0A%0A¿Me confirman existencia y método de pago?`;
-    
-    window.open(`https://wa.me/${TELEFONO}?text=${mensaje}`, '_blank');
-}
-
-// --- LÓGICA GENERAL ---
 const contenedor = document.getElementById('contenedorProductos');
 const contenedorPaginacion = document.getElementById('paginacion');
 const contenedorSub = document.getElementById('contenedorSubcategorias');
@@ -169,7 +27,6 @@ fetch(URL_JSON)
         listaFiltrada = data; 
         listaFinal = data;
         filtrarPrincipal('todo', document.querySelector('.cat-card.active'));
-        actualizarBadgeCarrito(); 
     })
     .catch(err => contenedor.innerHTML = '<p style="text-align:center;">Error de conexión.</p>');
 
@@ -193,33 +50,54 @@ function normalizarProcesador(txt) {
 }
 
 
-// --- FAVORITOS ---
+// --- LÓGICA DE LOCALSTORAGE PARA FAVORITOS ---
 let favoritos = JSON.parse(localStorage.getItem('eritech_favs')) || [];
+// 1. Alternar favorito (Quitar/Poner)
 function toggleFavorito(e, sku) {
-    e.stopPropagation(); 
+    e.stopPropagation(); // Evita que se abra el detalle
     const index = favoritos.indexOf(sku);
-    if (index > -1) favoritos.splice(index, 1);
-    else favoritos.push(sku);
+    
+    if (index > -1) {
+        favoritos.splice(index, 1);
+    } else {
+        favoritos.push(sku);
+    }
+    
     localStorage.setItem('eritech_favs', JSON.stringify(favoritos));
     actualizarContador();
-    if (categoriaActual === 'favoritos') mostrarFavoritos(document.getElementById('btn-ver-favoritos'));
-    else cargarPagina(paginaActual); 
+    
+    // Si estamos viendo la lista de favoritos, refrescar al quitar uno
+    if (categoriaActual === 'favoritos') {
+        mostrarFavoritos(document.getElementById('btn-ver-favoritos'));
+    } else {
+        // Si no, solo refrescar la vista actual para que el corazón cambie de color
+        cargarPagina(paginaActual); 
+    }
 }
 
+// 2. Mostrar la sección de favoritos
 function mostrarFavoritos(elemento) {
+    // Estilo visual de los botones
     document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active', 'fav-active'));
     elemento.classList.add('fav-active');
+    
     categoriaActual = 'favoritos';
     filtrosActivos = { subcategoria: null, marca: null, procesador: null, ram: null, almacenamiento: null };
     contenedorSub.innerHTML = ''; 
+
+    // Filtrar los productos que coincidan con los SKUs guardados
     listaFiltrada = productosGlobal.filter(p => favoritos.includes(p.sku || p.clave));
-    listaFinal = [...listaFiltrada]; 
+    listaFinal = [...listaFiltrada]; // Copia para poder ordenar
+    
+    // Mostrar botón de limpiar solo aquí
     const btnLimpiar = document.getElementById('btn-limpiar-favs');
     if(btnLimpiar) btnLimpiar.classList.remove('oculto');
+
     generarFiltrosSidebar(listaFiltrada);
     cargarPagina(1);
 }
 
+// 3. Actualizar el circulito rojo
 function actualizarContador() {
     const contador = document.getElementById('fav-counter');
     if(!contador) return;
@@ -227,38 +105,70 @@ function actualizarContador() {
     contador.style.display = favoritos.length > 0 ? 'flex' : 'none';
 }
 
+// 4. Limpiar todo
 function limpiarFavoritos() {
+    // 1. Borramos el dato de la memoria del navegador
     localStorage.removeItem('eritech_favs');
+    
+    // 2. Reseteamos la variable local en el código
     favoritos = [];
+    
+    // 3. Actualizamos el contador visual (el circulito rojo)
     actualizarContador();
+    
+    // 4. Si estamos en la sección de favoritos, limpiamos la pantalla de inmediato
     if (categoriaActual === 'favoritos') {
         contenedor.innerHTML = '<p style="color:#777; text-align:center; grid-column: 1/-1; padding: 40px;">Lista vaciada con éxito.</p>';
         listaFiltrada = [];
         listaFinal = [];
+        // Ocultamos el botón de limpiar ya que no hay nada
         document.getElementById('btn-limpiar-favs').classList.add('oculto');
     }
+    
+    // 5. Opcional: Forzar un pequeño aviso en consola para debug
+    console.log("Favoritos borrados correctamente");
 }
 
+// 3. Función de Ordenamiento
 function aplicarOrden() {
     const criterio = document.getElementById('sort-logic').value;
+    
+    // 1. SIEMPRE reiniciamos la listaFinal basándonos en la lista actual filtrada
+    // Esto es lo que permite "volver a la normalidad"
     listaFinal = [...listaFiltrada]; 
-    if (criterio === 'p-menor') listaFinal.sort((a, b) => (a.precio || 0) - (b.precio || 0));
-    else if (criterio === 'p-mayor') listaFinal.sort((a, b) => (b.precio || 0) - (a.precio || 0));
-    else if (criterio === 'a-z') listaFinal.sort((a, b) => a.nombre.localeCompare(b.nombre));
-    else if (criterio === 'z-a') listaFinal.sort((a, b) => b.nombre.localeCompare(a.nombre));
+
+    // 2. Aplicamos el orden solo si NO es relevancia
+    if (criterio === 'p-menor') {
+        listaFinal.sort((a, b) => (a.precio || 0) - (b.precio || 0));
+    } else if (criterio === 'p-mayor') {
+        listaFinal.sort((a, b) => (b.precio || 0) - (a.precio || 0));
+    } else if (criterio === 'a-z') {
+        listaFinal.sort((a, b) => a.nombre.localeCompare(b.nombre));
+    } else if (criterio === 'z-a') {
+        listaFinal.sort((a, b) => b.nombre.localeCompare(a.nombre));
+    }
+    
+    // Si es 'relevancia', no entra en los IF y se queda como la original
+    
     cargarPagina(1);
 }
-
+// MODIFICACIÓN: Actualiza tu función mostrarFavoritos para que muestre el botón de limpiar
 const originalMostrarFavoritos = mostrarFavoritos;
 mostrarFavoritos = function(elemento) {
     originalMostrarFavoritos(elemento);
     document.getElementById('btn-limpiar-favs').classList.remove('oculto');
 };
 
+// MODIFICACIÓN: En tus otras funciones de filtrado (filtrarPrincipal), añade:
+// document.getElementById('btn-limpiar-favs').classList.add('oculto');
+
+// Inicializar contador al cargar la página
 window.onload = () => {
     actualizarContador();
-    actualizarBadgeCarrito();
 };
+
+
+
 
 function normalizarRAM(txt) {
     if(!txt) return null;
@@ -278,6 +188,7 @@ function normalizarDisco(txt) {
 function generarFiltrosSidebar(lista) {
     sidebarFilters.innerHTML = ''; 
     crearSeccionFiltro(lista, 'Marcas', 'marca', 'marca');
+
     if (categoriaActual === 'todo') return; 
 
     if (categoriaActual === 'computadoras') {
@@ -308,14 +219,24 @@ function extraerYAgrupar(lista, keywords, normalizador) {
 function crearSeccionFiltro(lista, titulo, keyFiltro, propJSON) {
     const conteo = {};
     lista.forEach(p => {
+        // Normalizamos un poco para evitar duplicados como "HP" y "hp"
         let val = p[propJSON] || 'Otros';
+        // Opcional: Unificar variaciones comunes si el JSON viene sucio
         if(val === 'Hewlett Packard') val = 'HP'; 
+        
         conteo[val] = (conteo[val] || 0) + 1;
     });
+
+    // AQUÍ ESTABA EL DETALLE: 
+    // Antes ordenaba .sort() que es alfabético.
+    // Ahora ordenamos por [1] (cantidad) de mayor a menor (b - a).
     const opcionesOrdenadas = Object.keys(conteo).sort((a, b) => {
         return conteo[b] - conteo[a];
     });
+
+    // Solo mandamos las opciones si hay al menos una
     if(opcionesOrdenadas.length > 0) {
+        // En renderHTMLFiltro pasamos todo, allá se hace el recorte a los top 15
         renderHTMLFiltro(titulo, keyFiltro, opcionesOrdenadas, conteo);
     }
 }
@@ -392,7 +313,7 @@ function ejecutarFiltradoFinal() {
 
 function filtrarPrincipal(filtro, elemento) {
   document.getElementById('sort-logic').value = 'relevancia';
-  document.getElementById('btn-limpiar-favs').classList.add('oculto'); 
+  document.getElementById('btn-limpiar-favs').classList.add('oculto'); // <-- ESTO
     if(elemento) {
         document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
         elemento.classList.add('active');
@@ -401,9 +322,13 @@ function filtrarPrincipal(filtro, elemento) {
     filtrosActivos = { subcategoria: null, marca: null, procesador: null, ram: null, almacenamiento: null };
 
     if(filtro === 'todo') {
-        listaFiltrada = [...productosGlobal];
+       listaFiltrada = [...productosGlobal];
+        
+        // 2. ORDENAMOS POR STOCK (Mayor a menor)
+        // Así los productos con más inventario salen al principio
         listaFiltrada.sort((a, b) => (b.existenciaCUN || 0) - (a.existenciaCUN || 0));
-        contenedorSub.innerHTML = ''; 
+        
+        contenedorSub.innerHTML = ''; // Limpiar subcategorías
     } else {
         listaFiltrada = productosGlobal.filter(p => {
             const catLower = (p.categoria || '').toLowerCase();
@@ -416,20 +341,65 @@ function filtrarPrincipal(filtro, elemento) {
             if (filtro === 'accesorios') return todo.includes('accesorio') || todo.includes('mochila') || todo.includes('mouse') || todo.includes('teclado') || todo.includes('bocina') || todo.includes('audifono') || todo.includes('diadema');
             if (filtro === 'impresion') return todo.includes('impresi') || todo.includes('tinta') || todo.includes('toner') || todo.includes('cinta');
             
+            // --- NUEVAS CATEGORÍAS AGREGADAS ---
+            
             if (filtro === 'redes') {
-                return todo.includes('red') || todo.includes('switch') || todo.includes('router') || todo.includes('access point') || todo.includes('bobina') || todo.includes('transceptor') || todo.includes('cable de red') || todo.includes('jack') || todo.includes('placa de pared');
+                return todo.includes('red') || 
+                       todo.includes('switch') || 
+                       todo.includes('router') || 
+                       todo.includes('access point') || 
+                       todo.includes('bobina') || 
+                       todo.includes('transceptor') ||
+                       todo.includes('cable de red') ||
+                       todo.includes('jack') ||
+                       todo.includes('placa de pared');
             }
+
             if (filtro === 'licencias') {
-                return todo.includes('software') || todo.includes('licencia') || todo.includes('antivirus') || todo.includes('esd') || todo.includes('digital') || todo.includes('aspel') || todo.includes('microsoft');
+                return todo.includes('software') || 
+                       todo.includes('licencia') || 
+                       todo.includes('antivirus') || 
+                       todo.includes('esd') || 
+                       todo.includes('digital') ||
+                       todo.includes('aspel') ||
+                       todo.includes('microsoft');
             }
+
+            // ... (tus filtros anteriores de redes y licencias) ...
+
             if (filtro === 'seguridad') {
-                return todo.includes('vigilancia') || todo.includes('cámara') || todo.includes('camera') || todo.includes('dvr') || todo.includes('nvr') || todo.includes('xvr') || todo.includes('cctv') || todo.includes('control de acceso') || todo.includes('alarma') || todo.includes('videoportero');
+                return todo.includes('vigilancia') || 
+                       todo.includes('cámara') || 
+                       todo.includes('camera') || 
+                       todo.includes('dvr') || 
+                       todo.includes('nvr') || 
+                       todo.includes('xvr') || 
+                       todo.includes('cctv') || 
+                       todo.includes('control de acceso') || 
+                       todo.includes('alarma') ||
+                       todo.includes('videoportero');
             }
+
             if (filtro === 'componentes') {
-                return todo.includes('procesador') || todo.includes('tarjeta madre') || todo.includes('motherboard') || todo.includes('memoria ram') || todo.includes('ddr') || todo.includes('gabinete') || todo.includes('fuente de poder') || todo.includes('disipador') || todo.includes('ventilador') || todo.includes('disco duro') || todo.includes('ssd') || todo.includes('tarjeta de video');
+                // Filtramos hardware interno de PC y almacenamiento
+                return todo.includes('procesador') || 
+                       todo.includes('tarjeta madre') || 
+                       todo.includes('motherboard') || 
+                       todo.includes('memoria ram') || 
+                       todo.includes('ddr') || 
+                       todo.includes('gabinete') || 
+                       todo.includes('fuente de poder') || 
+                       todo.includes('disipador') || 
+                       todo.includes('ventilador') || 
+                       todo.includes('disco duro') || 
+                       todo.includes('ssd') ||
+                       todo.includes('tarjeta de video');
             }
+
             return false;
         });
+        
+        // Generar subcategorías para la selección actual
         generarSubcategorias(listaFiltrada);
     }
     generarFiltrosSidebar(listaFiltrada);
@@ -439,6 +409,7 @@ function filtrarPrincipal(filtro, elemento) {
 
 function generarSubcategorias(lista) {
     contenedorSub.innerHTML = '';
+    // FIX 2: Filtro manual ESTRICTO para Accesorios (SOLO BÁSICOS)
     if(categoriaActual === 'accesorios') {
         const permitidos = ['mouse', 'teclado', 'mochila', 'audifonos', 'diadema', 'kit'];
         const subcats = new Set();
@@ -450,6 +421,7 @@ function generarSubcategorias(lista) {
         });
         renderChips(subcats);
     } 
+    // Para otras categorias (MENOS TODO)
     else if(categoriaActual !== 'todo') {
         const subcats = new Set();
         lista.forEach(p => { if(p.subcategoria) subcats.add(p.subcategoria); });
@@ -474,6 +446,7 @@ function renderChips(setSubcats) {
     }
 }
 
+const formatearMoneda = (c) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(c);
 function obtenerInfoStock(s) { return (s && Number(s) > 0) ? {t:"Disponible", c:"st-ok"} : {t:"Sobre Pedido", c:"st-wait"}; }
 
 function cargarPagina(pagina) {
@@ -487,25 +460,28 @@ function cargarPagina(pagina) {
 function renderizarProductos(lista) {
     contenedor.innerHTML = '';
     
+    // ... (tu código de validación de lista vacía) ...
+
     lista.forEach(prod => {
-        const precio = prod.precio ? formatearDinero(prod.precio) : "$0.00";
+        const precio = prod.precio ? formatearMoneda(prod.precio) : "$0.00";
         const clave = prod.sku || prod.clave || 'S/N';
         const stockInfo = obtenerInfoStock(prod.existenciaCUN);
         
         const esFav = favoritos.includes(clave) ? 'active' : '';
-        const textoPrincipal = prod.descripcion_corta || prod.nombre;
 
-        // Reemplazo comillas para el JSON stringify
-        const prodString = JSON.stringify(prod).replace(/"/g, '&quot;');
+        // === AQUÍ ESTÁ EL CAMBIO CLAVE ===
+        // Priorizamos la descripción corta que tiene las specs
+        const textoPrincipal = prod.descripcion_corta || prod.nombre;
 
         const card = document.createElement('div');
         card.className = 'producto-card';
+        // Agregamos title="..." para que al pasar el mouse se vea el texto completo
         card.innerHTML = `
             <div class="card-header">
                 <span class="badge-stock ${stockInfo.c}">${stockInfo.t}</span>
                 <span class="prod-marca">${prod.marca||'ERITECH'}</span>
             </div>
-            <div class="img-wrapper" onclick="verDetalle(${prodString})">
+            <div class="img-wrapper" onclick="verDetalle(${JSON.stringify(prod).replace(/"/g, '&quot;')})">
                 <div class="fav-btn ${esFav}" onclick="toggleFavorito(event, '${clave}')">
                     <span class="material-icons-outlined" style="font-size:20px;">favorite</span>
                 </div>
@@ -513,16 +489,16 @@ function renderizarProductos(lista) {
                 <img src="${prod.imagen}" class="producto-img" onerror="this.src='https://via.placeholder.com/200?text=Eritech'">
             </div>
             
-            <div class="card-body" onclick="verDetalle(${prodString})">
+            <div class="card-body" onclick="verDetalle(${JSON.stringify(prod).replace(/"/g, '&quot;')})">
                 <span class="sku-card">SKU: ${clave}</span>
+                
                 <h3 class="prod-titulo" title="${textoPrincipal}">${textoPrincipal}</h3>
+                
             </div>
             
             <div class="card-footer">
                 <div class="price-group"><span class="monto">${precio}<span> MXN</span></span></div>
-                <button class="btn-add-cart" onclick="addToCart(${prodString}, event)" title="Agregar al pedido">
-                    <span class="material-icons-outlined" style="font-size:18px;">add_shopping_cart</span>
-                </button>
+                <div class="btn-card-action"><span class="material-icons-outlined" style="font-size:18px;">arrow_forward</span></div>
             </div>
         `;
         contenedor.appendChild(card);
@@ -550,16 +526,25 @@ function crearBtnPag(txt, targetPage, active=false) {
     contenedorPaginacion.appendChild(btn);
 }
 
+/* ========================================================
+   LOGICA SCROLL CON MEMORIA + FIX PANTALLA NEGRA
+   ======================================================== */
 function verDetalle(prod) {
+    // 1. Guardar donde estamos (Memoria)
     scrollGuardado = window.scrollY;
-    vistaCatalogo.classList.add('oculto'); 
-    vistaDetalle.classList.remove('oculto'); 
 
+    // 2. Swapeo simple: Ocultar uno, mostrar otro
+    vistaCatalogo.classList.add('oculto'); // Oculta el catálogo
+    vistaDetalle.classList.remove('oculto'); // Muestra el detalle
+
+    // 3. SCROLL FORZADO AL TOPE (Para evitar la pantalla negra)
+    // Usamos el ancla invisible que pusimos arriba del todo
     const anchor = document.getElementById('inicio-app');
     if(anchor) anchor.scrollIntoView({ behavior: 'auto' });
     else window.scrollTo(0,0);
 
-    const precio = prod.precio ? formatearDinero(prod.precio) : "$0.00";
+    // Llenar datos...
+    const precio = prod.precio ? formatearMoneda(prod.precio) : "$0.00";
     const clave = prod.sku || prod.clave || 'S/N';
     const stock = obtenerInfoStock(prod.existenciaCUN);
 
@@ -571,16 +556,6 @@ function verDetalle(prod) {
     document.getElementById('det-stock').textContent = stock.t;
     document.getElementById('det-stock').className = `badge-stock ${stock.c}`;
 
-    // Configurar el botón de AGREGAR AL CARRITO del detalle
-    const btnAdd = document.getElementById('btn-add-detail');
-    const newBtn = btnAdd.cloneNode(true);
-    btnAdd.parentNode.replaceChild(newBtn, btnAdd);
-    newBtn.onclick = () => addToCart(prod);
-
-    // Botón de Duda Directa
-    const msg = `Hola, tengo una duda sobre este producto: ${prod.nombre} (SKU: ${clave}).`;
-    document.getElementById('btn-cotizar-final').href = `https://wa.me/${TELEFONO}?text=${encodeURIComponent(msg)}`;
-
     const tabla = document.getElementById('tabla-specs-completa');
     tabla.innerHTML = '';
     if(prod.especificaciones) {
@@ -588,11 +563,18 @@ function verDetalle(prod) {
             tabla.innerHTML += `<tr><td>${s.tipo}</td><td>${s.valor}</td></tr>`;
         });
     }
+
+    const msg = `Hola, me interesa: ${prod.nombre} (SKU: ${clave}).`;
+    document.getElementById('btn-cotizar-final').href = `https://wa.me/${TELEFONO}?text=${encodeURIComponent(msg)}`;
 }
 
 function cerrarDetalle() {
+    // 1. Restaurar vistas
     vistaDetalle.classList.add('oculto');
     vistaCatalogo.classList.remove('oculto');
+
+    // 2. RECUPERAR POSICION (Usar la memoria)
+    // El timeout ayuda a que GoDaddy procese el cambio de altura primero
     setTimeout(() => {
         window.scrollTo(0, scrollGuardado);
     }, 10);
