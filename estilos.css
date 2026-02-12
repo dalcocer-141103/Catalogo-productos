@@ -689,192 +689,117 @@
 
 }
 
-
-
-
-
 /* === CARRITO LATERAL (SLIDE-CART) === */
 
 /* Botón Flotante (Burbuja) */
-
 .float-cart-btn {
-
     position: fixed;
-
     top: 20px;
-
     right: 20px;
-
     z-index: 1000;
-
     background: var(--card-bg);
-
     border: 1px solid var(--eri-light);
-
     color: var(--eri-light);
-
     width: 50px;
-
     height: 50px;
-
     border-radius: 50%;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     cursor: pointer;
-
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-
     transition: 0.3s;
-
 }
 
-.float-cart-btn:hover { background: var(--eri-light); color: var(--bg-body); }
-
-
+.float-cart-btn {
+    position: fixed;
+    bottom: 30px;       /* CAMBIO: En lugar de top: 20px, lo ponemos abajo */
+    right: 30px;        /* Un poco más separado del borde */
+    z-index: 2147483647; /* CAMBIO: El valor máximo permitido en CSS para que SIEMPRE esté encima */
+    background: var(--card-bg);
+    border: 1px solid var(--eri-light);
+    color: var(--eri-light);
+    width: 60px;        /* Un poco más grande para que sea fácil de tocar en móvil */
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.8); /* Sombra más fuerte para resaltar */
+    transition: 0.3s;
+}
 
 /* Contador rojo */
 
 .cart-counter {
-
     position: absolute;
-
     top: -5px;
-
     right: -5px;
-
     background: #ff5252;
-
     color: white;
-
     font-size: 11px;
-
     font-weight: 800;
-
     width: 20px;
-
     height: 20px;
-
     border-radius: 50%;
-
     display: flex;
-
     align-items: center;
-
     justify-content: center;
-
     border: 2px solid var(--bg-body);
-
 }
-
-
 
 /* El Panel Lateral (Oculto a la derecha) */
-
 .cart-sidebar {
-
     position: fixed;
-
     top: 0;
-
     right: -450px; /* Escondido */
-
     width: 100%;
-
     max-width: 400px;
-
     height: 100vh;
-
     background: #112026; /* Fondo oscuro */
-
     z-index: 2000;
-
     box-shadow: -5px 0 30px rgba(0,0,0,0.8);
-
     transition: right 0.4s cubic-bezier(0.77, 0, 0.175, 1); /* Animación suave */
-
     display: flex;
-
     flex-direction: column;
-
     border-left: 1px solid rgba(255,255,255,0.1);
-
 }
-
-
 
 .cart-sidebar.open { right: 0; /* Mostrar */ }
-
-
-
-/* Máscara oscura de fondo */
-
 .cart-overlay {
-
     position: fixed;
-
     top: 0; left: 0; width: 100%; height: 100%;
-
     background: rgba(0,0,0,0.7);
-
     z-index: 1999;
-
     backdrop-filter: blur(3px); /* Efecto borroso pro */
-
     display: none;
-
 }
-
 .cart-overlay.active { display: block; }
-
-
 
 /* Elementos internos del carrito */
 
 .cart-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; }
-
 .cart-body { flex: 1; overflow-y: auto; padding: 20px; }
-
 .cart-footer { padding: 20px; background: #0f171a; border-top: 1px solid rgba(255,255,255,0.1); }
-
-
 
 /* Item del carrito */
 
 .cart-item { display: flex; gap: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; }
-
 .cart-item img { width: 50px; height: 50px; object-fit: contain; background: white; border-radius: 4px; }
-
 .cart-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-
 .cart-title { font-size: 0.8rem; color: white; margin: 0 0 5px 0; font-weight: 600; line-height: 1.2; }
-
 .cart-controls { display: flex; align-items: center; gap: 10px; }
-
 .qty-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 20px; height: 20px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
 .cart-price { color: var(--eri-light); font-weight: 700; font-size: 0.9rem; }
 
-
-
 /* Botón Checkout */
-
 .btn-checkout {
-
     width: 100%;
-
     padding: 15px;
-
     background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
-
     color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
-
     font-size: 1rem; display: flex; justify-content: center; align-items: center; gap: 10px;
-
 }
 
 
